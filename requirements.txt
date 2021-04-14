@@ -1,0 +1,13 @@
+py-altdns
+dnsgen
+argparse
+dnspython
+requests
+colorama==0.3.7
+requests
+beautifulsoup4
+colorama
+matplotlib
+networkx
+PyQt5
+colored
