@@ -204,6 +204,6 @@ echo "Installing MassDNS"
 git clone https://github.com/blechschmidt/massdns.git
 cd massdns; make; cd ..
 sudo mv massdns/bin/massdns /bin/
-
+sed -i 's/from Queue/from queue/g' ~/.local/lib/python3.8/site-packages/altdns/__main__.py
 
 echo "Installation finished. Please check ~/BugBounty and ~/Auto-Enum for future reference"
