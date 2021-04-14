@@ -3,7 +3,8 @@
 # This script is supposed to help install all the necessary tools to run an automated scan of a domain.
 
 echo "updating and upgrading"
-
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
 sudo apt-get update -y
 sudo apt-get upgrade -y
 sudo add-apt-repository universe
@@ -30,6 +31,7 @@ sudo apt-get install -y golang
 sudo apt-get install -y python-dnspython
 sudo apt-get install -y python2
 sudo apt-get install -y amass nmap 
+sudo apt-get install -y google-chrome-stable
 clear
 echo "Installing Python2 pip"
 curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | sudo python2
