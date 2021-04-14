@@ -30,8 +30,9 @@ sudo apt-get install -y xargs
 sudo apt-get install -y golang
 sudo apt-get install -y python-dnspython
 sudo apt-get install -y python2
-sudo apt-get install -y amass nmap 
+sudo apt-get install -y nmap 
 sudo apt-get install -y google-chrome-stable
+sudo snap install amass
 clear
 echo "Installing Python2 pip"
 curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | sudo python2
