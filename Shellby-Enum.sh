@@ -283,7 +283,7 @@ if [ ! -d $PWD/Scan/$d/dirsearch ]; then
         mkdir Scan/$d/dirsearch
 fi
 
-for i in $(cat Scan/$d/alive.txt | sed 's/https\?:\/\///' | sed 's/http\?:\/\///'); do ffuf -x php,asp,aspx,jsp,html,zip,jar  -w dirsearch/db/dicc.txt  -u https://$i/FUZZ -o "Scan/$d/dirsearch/$i-results.txt"; done
+for i in $(cat Scan/$d/alive.txt | sed 's/https\?:\/\///' | sed 's/http\?:\/\///'); do ffuf -e php,txt,html  -w dirsearch/db/dicc.txt  -u https://$i/FUZZ -o "Scan/$d/dirsearch/$i-results.txt"; done
 
 
 
