@@ -188,6 +188,13 @@ wget https://github.com/Edu4rdSHL/findomain/releases/latest/download/findomain-l
 chmod +x findomain-linux
 sudo mv findomain-linux /bin/findomain
 
+#Nuclei Templates
+echo "Installing nuclei-templates"
+cd ~/BugBounty/Tools/
+git clone https://github.com/projectdiscovery/nuclei-templates.git
+echo "nuclei templates installed"
+
+
 #Acquatone
 echo "Installing aquatone"
 cd ~/BugBounty/Tools
