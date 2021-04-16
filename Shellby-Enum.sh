@@ -299,7 +299,7 @@ rm -rf Scan/$d/linkstemp/
 
 # Uses fimap to search for Local File Inclusion vulnerabilities
 echo "Using fimap to scan for LFI vulns"
-python2 ~/BugBounty/Tools/fimap/src/fimap.py -m -l Scan/$d/links/lfi-links.txt -w results/lfi-results.txt
+python2 ~/BugBounty/Tools/fimap/src/fimap.py -m -l Scan/$d/links/lfi-links.txt -w Scan/$d/results/lfi-results.txt
 echo "fimap scan finished"
 # Uses dalfox to exploit links found by crawling and waybackurls
 echo "Started vulnerability scanning. Please maintain your patience"
@@ -312,51 +312,47 @@ rm Scan/$d/links/xss-links-valid.txt
 
 echo "Successfully reflected xss links can be found in Scan/$d/links/xss-links.txt"
 
-echo "Running SQLI scans on links"
+#echo "Running SQLI scans on links"
 
-for sql in $(cat Scan/$d/links/sqli-links); do python3 ~/BugBounty/Tools/DSSS/dsss.py -u $d >> Scan/$d/links/sqli-links-valid.txt;done
+#for sql in $(cat Scan/$d/links/sqli-links.txt); do python3 ~/BugBounty/Tools/DSSS/dsss.py -u $sql >> Scan/$d/links/sqli-links-valid.txt;done
 #python2 ~/BugBounty/Tools/sqli-scanner/sqli-scanner.py -f Scan/$d/links/sqli-links.txt -o Scan/$d/links/sqli-links-valid.txt
-cat Scan/$d/links/sqli-links-valid.txt > Scan/$d/links/sqli-links.txt
-rm Scan/$d/links/sqli-links-valid.txt
+#cat Scan/$d/links/sqli-links-valid.txt > Scan/$d/links/sqli-links.txt
+#rm Scan/$d/links/sqli-links-valid.txt
 
-#clear
+clear
 
 echo "Scan finished, these are the results"
 echo "Find all results in Scan/$d/links/"
-echo""
-echo""
-echo"Possible XSS Vulnerabilities:"
+echo ""
+echo ""
+echo "Possible XSS Vulnerabilities:"
 cat Scan/$d/links/xss-links.txt | wc -l
-echo ""
-echo ""
-echo "Possible SQLI vulnerabilities"
-cat Scan/$d/links/sqli-links.txt | wc -l
+#echo ""
+#echo ""
+#echo "Possible SQLI vulnerabilities"
+#cat Scan/$d/links/sqli-links.txt | wc -l
 echo ""
 echo ""
 echo "Possible LFI Vulnerabilities"
-cat Scan/$d/links/lfi-links.txt | wc -l
+cat Scan/$d/results/lfi-results.txt | wc -l
 
-
-if [[ "$*" = *"-k"* ]]
-then
-echo "You have enabled KILLMODE, all positive results will be actively exploited, EXIT NOW IF YOU DON'T HAVE PERMISSION TO DO THIS"
-clear
-echo "dalfox alone"
+echo "Exploitatin has begun"
+echo ""
 cat Scan/$d/links/xss-links.txt | dalfox pipe  >>  Scan/$d/results/xss-results.txt
 
 
 
 #Uses the perfectly crafted SQLMAP to find vulnerabilities in HTTP headers, PHP cookies and the provided input (Overall 10/10 tool)
-echo "Running SQL Injections on links"
-sqlmap -m Scan/$d/links/sqli-links.txt --batch --level 2  | tee Scan/$d/results/sqli-results.txt
+#echo "Running SQL Injections on links"
+#sqlmap -m Scan/$d/links/sqli-links.txt --batch --level 2  | tee Scan/$d/results/sqli-results.txt
 
 
-echo "Cleaning up files!"
+#echo "Cleaning up files!"
 
-echo "Exploiting links with nuclei templates..."
-#nuclei -t nuclei-templates/ -l spiderlinks.txt -o results/nuclei-results.txt
+#echo "Exploiting links with nuclei templates..."
+#nuclei -t ~/BugBounty/Tools/nuclei-templates/ -l spiderlinks.txt -o Scan/$d/results/$d-nuclei-results.txt
 
-echo "Checking for valid waybackurls"
+#echo "Checking for valid waybackurls"
 #Runs Waybackurls to find old links (Some of them are no longer visible on google, some lucky break might occur)
 #echo "Running Waybackmachine on all successfully probed domain names"
 #awk '$0="https://"$0' probed.txt | waybackurls | grep $d | qsreplace -a 'input' | sort -u  >> waybackurls.txt
@@ -365,4 +361,3 @@ echo "Checking for valid waybackurls"
 #httpx -l waybackurls.txt > spiderlinks.txt
 #echo "Notifying you on slack"
 #curl -X POST -H 'Content-type: application/json' --data '{"text":"Scan finished scanning: '$d'"' $slack_url
-fi
