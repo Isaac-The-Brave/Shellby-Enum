@@ -36,7 +36,7 @@ sudo snap install amass
 clear
 echo "Installing Python2 pip"
 curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | sudo python2
-pip3 install -r requirements.txt
+pip2 install -r requirements.txt
 # Ready directories for downloads
 
 echo "Making Directories for downloads"
