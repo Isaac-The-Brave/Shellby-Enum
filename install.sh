@@ -204,7 +204,7 @@ wget https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_
 unzip aquatone_linux_amd64_1.7.0.zip
 sudo mv aquatone /bin/
 echo "Installed aquatone"
-
+pip install py-altdns
 
 cd ~/BugBounty/Tools
 echo "Installing MassDNS"
